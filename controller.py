@@ -5,6 +5,7 @@ from watchdog.observers import Observer
 import customtkinter as ctk
 
 
+
 class Controller:
     def __init__(self, parent):
         self.parent = parent

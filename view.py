@@ -14,6 +14,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 from pubsub import pub
 from watchdog.events import FileSystemEventHandler
+import ctypes
 
 
 def format_bytes(size):
@@ -32,6 +33,11 @@ def popup_error(frame_text, info_text):
 
 class View(FileSystemEventHandler):
     def __init__(self, parent):
+        ctypes.windll.user32.SetProcessDPIAware()
+        self.scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
+        print(self.scaleFactor)
+
+
         self.pb = None
         self.top_progress = None
         self.a = None
@@ -96,8 +102,9 @@ class View(FileSystemEventHandler):
         self.extensions_paths = json.load(open('My extension.json'))
         self.directory = str(Path.home() / 'Desktop')
         self.file_data = {}
-        self.f = Figure(figsize=(1, 1), dpi=90)
+        self.f = Figure(figsize=(1, 1), dpi=90) #TODO resolution sensitive
         self.canvas = FigureCanvasTkAgg(self.f, self.right_top_side)
+        ctk.deactivate_automatic_dpi_awareness()
 
     def setup(self):
         self.create_widgets()
@@ -197,7 +204,7 @@ class View(FileSystemEventHandler):
         self.traverse_dir(self.node, self.path, 1)
         self.tree_view_width *= 20
 
-        self.tv.column('#0', minwidth=self.tree_view_width, width=600, stretch=True, anchor=CENTER)
+        self.tv.column('#0', minwidth=self.tree_view_width, width=600, stretch=True, anchor=CENTER) #TODO resolution sensitive
         self.tv.configure(yscrollcommand=self.ybar.set, xscrollcommand=self.xbar.set)
 
         self.graph()
@@ -228,7 +235,7 @@ class View(FileSystemEventHandler):
         self.xbar.pack(side='bottom', fill=tk.X)
 
         s = ttk.Style()
-        s.configure('Treeview', rowheight=40)
+        s.configure('Treeview', rowheight=int(20*self.scaleFactor)) #TODO resolution sensitive
         # s.configure('TProgressbar', thickness=40)
         self.tv.pack(side='left', fill=Y)
 
@@ -439,14 +446,14 @@ class View(FileSystemEventHandler):
     def open_popup(self):
         self.top = ctk.CTkToplevel(self.container)
         self.top.resizable(False, False)
-        self.top.geometry("600x350")
+        self.top.geometry("600x350")#TODO resolution sensitive
         self.top.title("Setting extensions directory names")
         columns = ('extension', 'directory name')
         self.ext = ttk.Treeview(self.top, columns=columns, show='headings')
         self.ext.heading('extension', text='extension')
         self.ext.heading('directory name', text='name of directory')
-        self.ext.column('extension', width=600)
-        self.ext.column('directory name', width=600)
+        self.ext.column('extension', width=int(300*self.scaleFactor))
+        self.ext.column('directory name', width=int(300*self.scaleFactor))
         self.extensions_paths = json.load(open('My extension.json'))
         for row in self.extensions_paths:
             self.ext.insert('', tk.END, values=(row, self.extensions_paths[row]))
